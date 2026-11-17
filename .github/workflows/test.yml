@@ -1,17 +1,34 @@
 name: Test
 on:
-  pull_request:          # プルリクエスト作成・更新時
+  pull_request:
   push:
-    branches: [main]     # mainへのpush時
+    branches: [main]
 permissions:
-  contents: read         # 必要最小限の権限
+  contents: read
+concurrency:                                  # プッシュ前の実行の取り消し
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10                        # タイムアウト
+    strategy:
+      fail-fast: false                         # 1つ失敗しても他を最後まで実行
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip                           # 依存パッケージのキャッシュ
+      - run: pip install -r requirements.txt
+      - run: pytest
+  all-tests-passed:                            # 必須チェック用のまとめジョブ
+    needs: test
+    if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4      # リポジトリのコードを取得
-      - uses: actions/setup-python@v5  # Pythonを用意
-        with:
-          python-version: "3.12"
-      - run: pip install pytest        # テストツールを導入
-      - run: pytest                    # テスト実行
+      - run: test "${{ needs.test.result }}" = "success"
+      - run: echo "### すべてのテストに合格しました" >> "$GITHUB_STEP_SUMMARY"
