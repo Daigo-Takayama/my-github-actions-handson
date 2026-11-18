@@ -1,0 +1,10 @@
+name: Permission Demo
+on: workflow_dispatch
+permissions: {}                 # まずは権限なし
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh issue create --repo "$GITHUB_REPOSITORY" --title "Actionsから作成" --body "GITHUB_TOKENで作成しました"
+        env:
+          GH_TOKEN: ${{ github.token }}
