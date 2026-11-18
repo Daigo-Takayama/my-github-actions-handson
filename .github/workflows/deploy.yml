@@ -1,0 +1,37 @@
+name: Deploy
+on:
+  push:
+    branches: [main]          # マージ後（mainへのpush）に動く
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false   # デプロイは途中で止めない
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest                         # テストを通ったものだけビルド
+      - run: python build.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist                        # 成果物をArtifactとして保存
+  deploy:
+    needs: build                            # buildが成功したときだけ動く
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write                          # Pagesへの公開に必要
+      id-token: write                       # デプロイの認証に必要
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4       # Artifactを受け取って公開
