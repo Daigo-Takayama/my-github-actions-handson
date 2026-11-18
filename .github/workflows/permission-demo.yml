@@ -1,6 +1,7 @@
 name: Permission Demo
 on: workflow_dispatch
-permissions: {}                 # まずは権限なし
+permissions:
+  issues: write                 # Issueの作成だけを許可
 jobs:
   demo:
     runs-on: ubuntu-latest
