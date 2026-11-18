@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"  # ワークフロー内のアクション
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"             # requirements.txt
+    directory: "/"
+    schedule:
+      interval: "weekly"
